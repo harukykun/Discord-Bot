@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "192.168.1.146",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": " mashirodb",
+            "database": "mydb",
+            "username": "mashirodb"
+        }
+    ]
+}

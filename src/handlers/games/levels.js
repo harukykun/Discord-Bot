@@ -4,27 +4,43 @@ const levels = require("../../database/models/levels");
 
 module.exports = async (client) => {
     client.setXP = async function (userId, guildId, xp) {
-        const user = await levels.findOne({ userID: userId, guildID: guildId });
-        if (!user) return false;
+        let user = await levels.findOne({ userID: userId, guildID: guildId });
+        if (!user) {
+            user = await levels.create({
+                userID: userId,
+                guildID: guildId,
+                xp: xp,
+                level: Math.floor(0.1 * Math.sqrt(xp))
+            });
+            return user;
+        }
 
         user.xp = xp;
         user.level = Math.floor(0.1 * Math.sqrt(user.xp));
         user.lastUpdated = new Date();
 
-        user.save();
+        await user.save();
 
         return user;
     }
 
     client.setLevel = async function (userId, guildId, level) {
-        const user = await levels.findOne({ userID: userId, guildID: guildId });
-        if (!user) return false;
+        let user = await levels.findOne({ userID: userId, guildID: guildId });
+        if (!user) {
+            user = await levels.create({
+                userID: userId,
+                guildID: guildId,
+                xp: level * level * 100,
+                level: level
+            });
+            return user;
+        }
 
         user.level = level;
         user.xp = level * level * 100;
         user.lastUpdated = new Date();
 
-        user.save();
+        await user.save();
 
         return user;
     }
@@ -33,12 +49,12 @@ module.exports = async (client) => {
         const user = await levels.findOne({ userID: userId, guildID: guildId });
 
         if (!user) {
-            const newUser = new levels({
+            await levels.create({
                 userID: userId,
                 guildID: guildId,
                 xp: xp,
                 level: Math.floor(0.1 * Math.sqrt(xp))
-            }).save();
+            });
 
             return (Math.floor(0.1 * Math.sqrt(xp)) > 0);
         }
@@ -49,18 +65,26 @@ module.exports = async (client) => {
 
         await user.save();
 
-        return (Math.floor(0.1 * Math.sqrt(user.xp -= xp)) < user.level);
+        return (Math.floor(0.1 * Math.sqrt(user.xp - xp)) < user.level);
     }
 
     client.addLevel = async function (userId, guildId, level) {
-        const user = await levels.findOne({ userID: userId, guildID: guildId });
-        if (!user) return false;
+        let user = await levels.findOne({ userID: userId, guildID: guildId });
+        if (!user) {
+            user = await levels.create({
+                userID: userId,
+                guildID: guildId,
+                xp: level * level * 100,
+                level: level
+            });
+            return user;
+        }
 
         user.level += parseInt(level, 10);
         user.xp = user.level * user.level * 100;
         user.lastUpdated = new Date();
 
-        user.save();
+        await user.save();
 
         return user;
     }

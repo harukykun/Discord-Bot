@@ -1,9 +1,11 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    User: String,
-    UserTag: String,
-    Received: Number
+module.exports = createModel({
+    name: 'thanks',
+    fields: {
+        User: { type: DataTypes.STRING },
+        UserTag: { type: DataTypes.STRING },
+        Received: { type: DataTypes.INTEGER }
+    }
 });
-
-module.exports = mongoose.model("thanks", Schema);

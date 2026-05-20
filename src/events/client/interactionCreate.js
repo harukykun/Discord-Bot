@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const Captcha = require("@haileybot/captcha-generator");
+// const Captcha = require("@haileybot/captcha-generator"); // Disabled due to canvas build issues on Windows
 
 const reactionSchema = require("../../database/models/reactionRoles");
 const banSchema = require("../../database/models/userBans");
@@ -74,57 +74,12 @@ module.exports = async (client, interaction) => {
             }
         })
     }
-
     // Verify system
     if (interaction.isButton() && interaction.customId == "Bot_verify") {
-        const data = await verify.findOne({ Guild: interaction.guild.id, Channel: interaction.channel.id });
-        if (data) {
-            let captcha = new Captcha();
-
-            try {
-                var image = new Discord.AttachmentBuilder(captcha.JPEGStream, {name:"captcha.jpeg"});
-
-                interaction.reply({ files: [image], fetchReply: true }).then(function (msg) {
-                    const filter = s => s.author.id == interaction.user.id;
-
-                    interaction.channel.awaitMessages({ filter, max: 1 }).then(response => {
-                        if (response.first().content === captcha.value) {
-                            response.first().delete();
-                            msg.delete();
-
-                            client.succNormal({
-                                text: "You have been successfully verified!"
-                            }, interaction.user).catch(error => { })
-
-                            var verifyUser = interaction.guild.members.cache.get(interaction.user.id);
-                            verifyUser.roles.add(data.Role);
-                        }
-                        else {
-                            response.first().delete();
-                            msg.delete();
-
-                            client.errNormal({
-                                error: "You have answered the captcha incorrectly!",
-                                type: 'editreply'
-                            }, interaction).then(msgError => {
-                                setTimeout(() => {
-                                    msgError.delete();
-                                }, 2000)
-                            })
-                        }
-                    })
-                })
-            }
-            catch (error) {
-                console.log(error)
-            }
-        }
-        else {
-            client.errNormal({
-                error: "Verify is disabled in this server! Or you are using the wrong channel!",
-                type: 'ephemeral'
-            }, interaction);
-        }
+        return interaction.reply({ 
+            content: "Hệ thống Verify (Captcha) tạm thời bị tắt do thiếu thư viện `canvas` (không tương thích với Node v24 trên Windows).", 
+            ephemeral: true 
+        });
     }
 
     // Reaction roles button

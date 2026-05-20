@@ -12,13 +12,17 @@ const player = Voice.createAudioPlayer({
 module.exports = (client) => {
 
     client.startStream = async function (url) {
-        const resource = Voice.createAudioResource(url, {
-            inputType: Voice.StreamType.Arbitrary,
-        });
+        try {
+            const resource = Voice.createAudioResource(url, {
+                inputType: Voice.StreamType.Arbitrary,
+            });
 
-        player.play(resource);
+            player.play(resource);
 
-        return Voice.entersState(player, Voice.AudioPlayerStatus.Playing, 5e3).catch(() => { });
+            return Voice.entersState(player, Voice.AudioPlayerStatus.Playing, 5e3).catch(() => { });
+        } catch (error) {
+            console.warn("[Warning] Failed to start radio stream (FFmpeg/avconv is not installed):", error.message);
+        }
     }
 
     client.connectToChannel = async function (channel = Discord.VoiceChannel) {
@@ -73,7 +77,7 @@ module.exports = (client) => {
         client.startStream(process.env.RADIO || "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO538");
     });
 
-    client.on(Discord.Events.ClientReady, async () => {
+    client.on("clientReady", async () => {
         client.startStream(process.env.RADIO || "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO538");
         
         Schema.find(async (err, data) => {

@@ -4,19 +4,17 @@ module.exports = async (client, interaction, args) => {
     let row = new Discord.ActionRowBuilder()
         .addComponents(
             new Discord.ButtonBuilder()
-                .setLabel("Mashiro")
-                .setURL("N/A")
+                .setLabel("Facebook")
+                .setURL("https://www.facebook.com/TiemPizzaNhoORinascita")
                 .setStyle(Discord.ButtonStyle.Link),
         );
 
     client.embed({
-        title: `${client.user.username}・Donate`,
-        desc: '_____ \n\nClick the button below for the sponsor page \n**Pay attention! sponsor is not required**',
-        thumbnail: client.user.avatarURL({ dynamic: true }),
+        title: `🌐・Socials`,
+        desc: `Follow us on our Facebook page!`,
+        image: "https://cdn.discordapp.com/attachments/843487478881976381/874694194474668052/Bot_banner_invite.jpg",
         url: "https://www.facebook.com/TiemPizzaNhoORinascita",
         components: [row],
         type: 'editreply'
     }, interaction)
 }
-
- 

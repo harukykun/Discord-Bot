@@ -32,18 +32,27 @@ module.exports = (client) => {
     client.play = async function (connection, interaction, guild, player) {
         var server = servers[guild];
 
-        const resource = createAudioResource(server.queue[0], { inputType: StreamType.Arbitrary });
-        player.play(resource);
+        try {
+            const resource = createAudioResource(server.queue[0], { inputType: StreamType.Arbitrary });
+            player.play(resource);
 
-        server.queue.shift();
+            server.queue.shift();
 
-        player.on(AudioPlayerStatus.Idle, () => {
-            if (server.queue[0]) {
-                client.play(connection, interaction, guild, player);
-            }
-            else {
-                connection.destroy();
-            }
-        });
+            player.on(AudioPlayerStatus.Idle, () => {
+                if (server.queue[0]) {
+                    client.play(connection, interaction, guild, player);
+                }
+                else {
+                    connection.destroy();
+                }
+            });
+        } catch (error) {
+            console.error("[Soundboard] Play error:", error.message);
+            connection.destroy();
+            return client.errNormal({
+                error: "This feature requires FFmpeg to be installed on the hosting server!",
+                type: "ephemeraledit"
+            }, interaction);
+        }
     }
 }

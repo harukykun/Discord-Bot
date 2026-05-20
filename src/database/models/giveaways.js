@@ -1,57 +1,32 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    messageId: String,
-    channelId: String,
-    guildId: String,
-    startAt: Number,
-    endAt: Number,
-    ended: Boolean,
-    winnerCount: Number,
-    prize: String,
-    messages: {
-        giveaway: String,
-        giveawayEnded: String,
-        inviteToParticipate: String,
-        drawing: String,
-        dropMessage: String,
-        winMessage: mongoose.Mixed,
-        embedFooter: mongoose.Mixed,
-        noWinner: String,
-        winners: String,
-        endedAt: String,
-        hostedBy: String
-    },
-    thumbnail: String,
-    hostedBy: String,
-    winnerIds: { type: [String], default: undefined },
-    reaction: mongoose.Mixed,
-    botsCanWin: Boolean,
-    embedColor: mongoose.Mixed,
-    embedColorEnd: mongoose.Mixed,
-    exemptPermissions: { type: [], default: undefined },
-    exemptMembers: String,
-    bonusEntries: String,
-    extraData: mongoose.Mixed,
-    lastChance: {
-        enabled: Boolean,
-        content: String,
-        threshold: Number,
-        embedColor: mongoose.Mixed
-    },
-    pauseOptions: {
-        isPaused: Boolean,
-        content: String,
-        unPauseAfter: Number,
-        embedColor: mongoose.Mixed,
-        durationAfterPause: Number
-    },
-    isDrop: Boolean,
-    allowedMentions: {
-        parse: { type: [String], default: undefined },
-        users: { type: [String], default: undefined },
-        roles: { type: [String], default: undefined }
+module.exports = createModel({
+    name: 'giveaways',
+    fields: {
+        messageId: { type: DataTypes.STRING },
+        channelId: { type: DataTypes.STRING },
+        guildId: { type: DataTypes.STRING },
+        startAt: { type: DataTypes.BIGINT },
+        endAt: { type: DataTypes.BIGINT },
+        ended: { type: DataTypes.BOOLEAN },
+        winnerCount: { type: DataTypes.INTEGER },
+        prize: { type: DataTypes.STRING },
+        messages: { type: DataTypes.JSONB },
+        thumbnail: { type: DataTypes.STRING },
+        hostedBy: { type: DataTypes.STRING },
+        winnerIds: { type: DataTypes.JSONB },
+        reaction: { type: DataTypes.JSONB },
+        botsCanWin: { type: DataTypes.BOOLEAN },
+        embedColor: { type: DataTypes.JSONB },
+        embedColorEnd: { type: DataTypes.JSONB },
+        exemptPermissions: { type: DataTypes.JSONB },
+        exemptMembers: { type: DataTypes.TEXT },
+        bonusEntries: { type: DataTypes.TEXT },
+        extraData: { type: DataTypes.JSONB },
+        lastChance: { type: DataTypes.JSONB },
+        pauseOptions: { type: DataTypes.JSONB },
+        isDrop: { type: DataTypes.BOOLEAN },
+        allowedMentions: { type: DataTypes.JSONB }
     }
 });
-
-module.exports = mongoose.model("giveaways", Schema);

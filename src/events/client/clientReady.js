@@ -39,7 +39,7 @@ module.exports = async (client) => {
                     statuttext = [
                         `・❓┆/help`,
                         `・💻┆${totalGuilds} servers`,
-                        `・📨┆discord.gg/corwindev`,
+                        `・📨┆discord.gg/tiempizzarinascita`,
                         `・🎉┆400+ commands`,
                         `・🏷️┆Version ${require(`${process.cwd()}/package.json`).version}`
                     ];
@@ -49,6 +49,8 @@ module.exports = async (client) => {
             })
     }, 50000)
 
-    client.player.init(client.user.id);
+    if (client.player) {
+        client.player.init(client.user.id);
+    }
 }
 

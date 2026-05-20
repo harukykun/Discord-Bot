@@ -1,6 +1,30 @@
 const Discord = require('discord.js');
 const chalk = require('chalk');
-require('dotenv').config('./.env');
+require('dotenv').config();
+
+// Monkey patch WebhookClient to prevent crash when webhooks are empty, missing, or invalid (e.g. 404 Unknown Webhook)
+const originalWebhookClient = Discord.WebhookClient;
+Discord.WebhookClient = class extends originalWebhookClient {
+    constructor(options) {
+        if (!options || !options.id || !options.token) {
+            return {
+                send: async () => { },
+                destroy: () => { }
+            };
+        }
+        super(options);
+    }
+
+    async send(...args) {
+        try {
+            return await super.send(...args);
+        } catch (err) {
+            // Quietly catch webhook errors to prevent process crash
+            console.log(chalk.yellow(`[Webhook Warning] Failed to send webhook: ${err.message || err}`));
+        }
+    }
+}
+
 const axios = require('axios');
 // Check if is up to date
 const { version } = require('.././package.json');
@@ -47,7 +71,7 @@ if (process.env.TOPGG_TOKEN) {
 console.clear();
 console.log(chalk.blue(chalk.bold(`System`)), (chalk.white(`>>`)), (chalk.green(`Starting up`)), (chalk.white(`...`)))
 console.log(`\u001b[0m`)
-console.log(chalk.red(`© CorwinDev | 2021 - ${new Date().getFullYear()}`))
+console.log(chalk.red(`MashiroDev`))
 console.log(chalk.red(`All rights reserved`))
 console.log(`\u001b[0m`)
 console.log(`\u001b[0m`)

@@ -1,9 +1,11 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    User: String,
-    Message: {type: String, default: false}
+module.exports = createModel({
+    name: 'afk',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        User: { type: DataTypes.STRING },
+        Message: { type: DataTypes.TEXT, defaultValue: null }
+    }
 });
-
-module.exports = mongoose.model("afk", Schema);

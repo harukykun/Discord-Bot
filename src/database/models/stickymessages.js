@@ -1,10 +1,12 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    Channel: String,
-    Content: String,
-    LastMessage: String,
+module.exports = createModel({
+    name: 'stickymessages',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        Channel: { type: DataTypes.STRING },
+        Content: { type: DataTypes.TEXT },
+        LastMessage: { type: DataTypes.STRING }
+    }
 });
-
-module.exports = mongoose.model("stickymessages", Schema);

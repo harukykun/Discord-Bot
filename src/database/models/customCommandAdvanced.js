@@ -1,10 +1,12 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    Name: String,
-    Responce: String,
-    Action: { type: String, default: "Normal" },
+module.exports = createModel({
+    name: 'customCommandsAdvanced',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        Name: { type: DataTypes.STRING },
+        Responce: { type: DataTypes.TEXT },
+        Action: { type: DataTypes.STRING, defaultValue: 'Normal' }
+    }
 });
-
-module.exports = mongoose.model("customCommandsAdvanced", Schema);

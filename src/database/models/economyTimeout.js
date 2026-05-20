@@ -1,20 +1,22 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    User: String,
-    Beg: String,
-    Crime: String,
-    Daily: String,
-    Weekly: String,
-    Monthly: String,
-    Hourly: String,
-    Work: String,
-    Rob: String,
-    Fish: String,
-    Hunt: String,
-    Yearly: String,
-    Present: String
+module.exports = createModel({
+    name: 'economytimeout',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        User: { type: DataTypes.STRING },
+        Beg: { type: DataTypes.STRING },
+        Crime: { type: DataTypes.STRING },
+        Daily: { type: DataTypes.STRING },
+        Weekly: { type: DataTypes.STRING },
+        Monthly: { type: DataTypes.STRING },
+        Hourly: { type: DataTypes.STRING },
+        Work: { type: DataTypes.STRING },
+        Rob: { type: DataTypes.STRING },
+        Fish: { type: DataTypes.STRING },
+        Hunt: { type: DataTypes.STRING },
+        Yearly: { type: DataTypes.STRING },
+        Present: { type: DataTypes.STRING }
+    }
 });
-
-module.exports = mongoose.model("economytimeout", Schema);

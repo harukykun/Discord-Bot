@@ -15,13 +15,13 @@ module.exports = async (client, interaction, args) => {
     const data = await Schema.findOne({ Guild: interaction.guild.id });
     if (data) {
         data.Levels = boolean;
-        data.save();
+        await data.save();
     }
     else {
-        new Schema({
+        await Schema.create({
             Guild: interaction.guild.id,
             Levels: boolean,
-        }).save();
+        });
     }
 
     client.succNormal({

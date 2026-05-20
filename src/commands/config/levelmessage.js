@@ -28,42 +28,39 @@ module.exports = async (client, interaction, args) => {
     }
 
     if (message.toUpperCase() == "DEFAULT") {
-        Schema.findOne({ Guild: interaction.guild.id }, async (err, data) => {
-            if (data) {
-                Schema.findOneAndDelete({ Guild: interaction.guild.id }).then(() => {
-                    client.succNormal({ 
-                        text: `Level message deleted!`,
-                        type: 'editreply'
-                    }, interaction);
-                })
-            }
-        })
+        const data = await Schema.findOne({ Guild: interaction.guild.id });
+        if (data) {
+            await Schema.findOneAndDelete({ Guild: interaction.guild.id });
+            client.succNormal({ 
+                text: `Level message deleted!`,
+                type: 'editreply'
+            }, interaction);
+        }
     }
     else {
-        Schema.findOne({ Guild: interaction.guild.id }, async (err, data) => {
-            if (data) {
-                data.Message = message;
-                data.save();
-            }
-            else {
-                new Schema({
-                    Guild: interaction.guild.id,
-                    Message: message
-                }).save();
-            }
+        const data = await Schema.findOne({ Guild: interaction.guild.id });
+        if (data) {
+            data.Message = message;
+            await data.save();
+        }
+        else {
+            await Schema.create({
+                Guild: interaction.guild.id,
+                Message: message
+            });
+        }
 
-            client.succNormal({
-                text: `The level message has been set successfully`,
-                fields: [
-                    {
-                        name: `💬┆Message`,
-                        value: `${message}`,
-                        inline: true
-                    },
-                ],
-                type: 'editreply'
-            }, interaction)
-        })
+        client.succNormal({
+            text: `The level message has been set successfully`,
+            fields: [
+                {
+                    name: `💬┆Message`,
+                    value: `${message}`,
+                    inline: true
+                },
+            ],
+            type: 'editreply'
+        }, interaction)
     }
 }
 

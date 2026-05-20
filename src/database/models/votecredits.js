@@ -1,9 +1,11 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    User: String,
-    Credits: Number,
-    Unlimited: Boolean
+module.exports = createModel({
+    name: 'votecredits',
+    fields: {
+        User: { type: DataTypes.STRING },
+        Credits: { type: DataTypes.INTEGER },
+        Unlimited: { type: DataTypes.BOOLEAN }
+    }
 });
-
-module.exports = mongoose.model("votecredits", Schema);

@@ -1,8 +1,10 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    Words: Array
+module.exports = createModel({
+    name: 'blacklist_words',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        Words: { type: DataTypes.JSONB, defaultValue: [] }
+    }
 });
-
-module.exports = mongoose.model("blacklist-words", Schema);

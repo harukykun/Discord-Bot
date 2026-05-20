@@ -1,11 +1,31 @@
 const Discord = require('discord.js');
+
+// Monkey patch WebhookClient to prevent crash when webhooks are empty/missing
+const originalWebhookClient = Discord.WebhookClient;
+Discord.WebhookClient = class extends originalWebhookClient {
+    constructor(options) {
+        if (!options || !options.id || !options.token) {
+            return {
+                send: async () => { },
+                destroy: () => { }
+            };
+        }
+        super(options);
+    }
+
+    async send(...args) {
+        try {
+            return await super.send(...args);
+        } catch (err) {
+            // Quietly catch webhook errors to prevent process crash
+            console.log(`[Webhook Warning] Failed to send webhook: ${err.message || err}`);
+        }
+    }
+}
+
 const fs = require('fs');
 
-const { Manager } = require("erela.js");
-const Spotify = require("erela.js-spotify");
-const Facebook = require("erela.js-facebook");
-const Deezer = require("erela.js-deezer");
-const AppleMusic = require("erela.js-apple");
+
 
 // Discord client
 const client = new Discord.Client({
@@ -50,70 +70,8 @@ const client = new Discord.Client({
 });
 
 
-const clientID = process.env.SPOTIFY_CLIENT_ID;
-const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-if (clientID && clientSecret) {
-    // Lavalink client
-    client.player = new Manager({
-        plugins: [
-            new AppleMusic(),
-            new Deezer(),
-            new Facebook(),
-            new Spotify({
-                clientID,
-                clientSecret,
-            })
-        ],
-        nodes: [
-            {
-                host: process.env.LAVALINK_HOST || "lava.link",
-                port: parseInt(process.env.LAVALINK_PORT) || 80,
-                password: process.env.LAVALINK_PASSWORD || "CorwinDev",
-                secure: Boolean(process.env.LAVALINK_SECURE) || false
-            },
-            {
-                host: "lavalink.techpoint.world",
-                port: 80,
-                password: "techpoint"
-            },
-        ],
-        send(id, payload) {
-            const guild = client.guilds.cache.get(id);
-            if (guild) guild.shard.send(payload);
-        },
-    })
-
-} else {
-    // Lavalink client
-    client.player = new Manager({
-        plugins: [
-            new AppleMusic(),
-            new Deezer(),
-            new Facebook(),
-        ],
-        nodes: [
-            {
-                host: process.env.LAVALINK_HOST || "lava.link",
-                port: parseInt(process.env.LAVALINK_PORT) || 80,
-                password: process.env.LAVALINK_PASSWORD || "CorwinDev",
-                secure: Boolean(process.env.LAVALINK_SECURE) || false
-            },
-        ],
-        send(id, payload) {
-            const guild = client.guilds.cache.get(id);
-            if (guild) guild.shard.send(payload);
-        }
-    })
-}
-const events = fs.readdirSync(`./src/events/music`).filter(files => files.endsWith('.js'));
-
-for (const file of events) {
-    const event = require(`./events/music/${file}`);
-    client.player.on(file.split(".")[0], event.bind(null, client)).setMaxListeners(0);
-};
-
 // Connect to database
-require("./database/connect")();
+const connectDB = require("./database/connect");
 
 // Client settings
 client.config = require('./config/bot');
@@ -145,20 +103,28 @@ const warnLogs = new Discord.WebhookClient({
     token: client.webhooks.warnLogs.token,
 });
 
-// Load handlers
-fs.readdirSync('./src/handlers').forEach((dir) => {
-    fs.readdirSync(`./src/handlers/${dir}`).forEach((handler) => {
-        require(`./handlers/${dir}/${handler}`)(client);
-    });
-});
+// Load handlers and login
+(async () => {
+    try {
+        await connectDB();
+    } catch (err) {
+        console.error("Failed to connect to database during startup:", err);
+    }
 
-client.login(process.env.DISCORD_TOKEN);
+    fs.readdirSync('./src/handlers').forEach((dir) => {
+        fs.readdirSync(`./src/handlers/${dir}`).forEach((handler) => {
+            require(`./handlers/${dir}/${handler}`)(client);
+        });
+    });
+
+    client.login(process.env.DISCORD_TOKEN);
+})();
 
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
     if (error) if (error.length > 950) error = error.slice(0, 950) + '... view console for details';
     if (error.stack) if (error.stack.length > 950) error.stack = error.stack.slice(0, 950) + '... view console for details';
-    if(!error.stack) return
+    if (!error.stack) return
     const embed = new Discord.EmbedBuilder()
         .setTitle(`🚨・Unhandled promise rejection`)
         .addFields([

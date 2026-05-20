@@ -1,11 +1,13 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    userID: { type: String },
-    guildID: { type: String },
-    xp: { type: Number, default: 0 },
-    level: { type: Number, default: 0 },
-    lastUpdated: { type: Date, default: new Date() }
+module.exports = createModel({
+    name: 'Levels',
+    fields: {
+        userID: { type: DataTypes.STRING },
+        guildID: { type: DataTypes.STRING },
+        xp: { type: DataTypes.INTEGER, defaultValue: 0 },
+        level: { type: DataTypes.INTEGER, defaultValue: 0 },
+        lastUpdated: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
+    }
 });
-
-module.exports = mongoose.model("Levels", Schema);

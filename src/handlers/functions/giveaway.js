@@ -7,7 +7,13 @@ const giveawayModel = require("../../database/models/giveaways");
 module.exports = (client) => {
     const GiveawayManagerWithOwnDatabase = class extends GiveawaysManager {
         async getAllGiveaways() {
-            return await giveawayModel.find().lean().exec();
+            const results = await giveawayModel.find({}).lean().exec();
+            // PostgreSQL BIGINT returns strings; discord-giveaways expects numbers
+            return results.map(g => {
+                if (g.startAt != null) g.startAt = Number(g.startAt);
+                if (g.endAt != null) g.endAt = Number(g.endAt);
+                return g;
+            });
         }
 
         async saveGiveaway(messageId, giveawayData) {
@@ -16,12 +22,20 @@ module.exports = (client) => {
         }
 
         async editGiveaway(messageId, giveawayData) {
-            await giveawayModel.updateOne({ messageId }, giveawayData, { omitUndefined: true }).exec();
+            const existing = await giveawayModel.findOne({ messageId });
+            if (existing) {
+                for (const [key, value] of Object.entries(giveawayData)) {
+                    if (value !== undefined) {
+                        existing[key] = value;
+                    }
+                }
+                await existing.save();
+            }
             return true;
         }
 
         async deleteGiveaway(messageId) {
-            await giveawayModel.deleteOne({ messageId }).exec();
+            await giveawayModel.deleteOne({ messageId });
             return true;
         }
 

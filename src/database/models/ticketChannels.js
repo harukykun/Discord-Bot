@@ -1,12 +1,14 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    TicketID: Number,
-    channelID: String,
-    creator: String,
-    claimed: String,
-    resolved: { type: Boolean, default: false }
+module.exports = createModel({
+    name: 'ticketChannels',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        TicketID: { type: DataTypes.INTEGER },
+        channelID: { type: DataTypes.STRING },
+        creator: { type: DataTypes.STRING },
+        claimed: { type: DataTypes.STRING },
+        resolved: { type: DataTypes.BOOLEAN, defaultValue: false }
+    }
 });
-
-module.exports = mongoose.model("ticketChannels", Schema);

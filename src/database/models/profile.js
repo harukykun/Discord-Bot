@@ -1,21 +1,23 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    User: String,
-    Gender: { type: String, default: "" },
-    Age: { type: String, default: "" },
-    Orgin: { type: String, default: "" },
-    Pets: Array,
-    Songs: Array,
-    Movies: Array,
-    Actors: Array,
-    Artists: Array,
-    Food: Array,
-    Hobbys: Array,
-    Status: { type: String, default: "" },
-    Aboutme: { type: String, default: "" },
-    Color: { type: String, default: "" },
-    Birthday: { type: String, default: "" },
+module.exports = createModel({
+    name: 'Profile',
+    fields: {
+        User: { type: DataTypes.STRING },
+        Gender: { type: DataTypes.STRING, defaultValue: '' },
+        Age: { type: DataTypes.STRING, defaultValue: '' },
+        Orgin: { type: DataTypes.STRING, defaultValue: '' },
+        Pets: { type: DataTypes.JSONB, defaultValue: [] },
+        Songs: { type: DataTypes.JSONB, defaultValue: [] },
+        Movies: { type: DataTypes.JSONB, defaultValue: [] },
+        Actors: { type: DataTypes.JSONB, defaultValue: [] },
+        Artists: { type: DataTypes.JSONB, defaultValue: [] },
+        Food: { type: DataTypes.JSONB, defaultValue: [] },
+        Hobbys: { type: DataTypes.JSONB, defaultValue: [] },
+        Status: { type: DataTypes.STRING, defaultValue: '' },
+        Aboutme: { type: DataTypes.TEXT, defaultValue: '' },
+        Color: { type: DataTypes.STRING, defaultValue: '' },
+        Birthday: { type: DataTypes.STRING, defaultValue: '' }
+    }
 });
-
-module.exports = mongoose.model("Profile", Schema);

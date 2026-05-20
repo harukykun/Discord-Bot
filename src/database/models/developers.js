@@ -1,8 +1,10 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Action: String,
-    Date: String
+module.exports = createModel({
+    name: 'developers',
+    fields: {
+        Action: { type: DataTypes.STRING },
+        Date: { type: DataTypes.STRING }
+    }
 });
-
-module.exports = mongoose.model("developers", Schema);

@@ -20,7 +20,9 @@ module.exports = (client) => {
             if(Discord.Events[eventUpperCase] === undefined){
                 client.on(eventName, event.bind(null, client)).setMaxListeners(0);
             }else {
-            client.on(Discord.Events[eventUpperCase], event.bind(null, client)).setMaxListeners(0);
+                let actualEvent = Discord.Events[eventUpperCase];
+                if (actualEvent === "ready") actualEvent = "clientReady";
+                client.on(actualEvent, event.bind(null, client)).setMaxListeners(0);
             }
         };
     });

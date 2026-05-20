@@ -1,9 +1,11 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    Level: Number,
-    Role: String,
+module.exports = createModel({
+    name: 'levelRewards',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        Level: { type: DataTypes.INTEGER },
+        Role: { type: DataTypes.STRING }
+    }
 });
-
-module.exports = mongoose.model("levelRewards", Schema);

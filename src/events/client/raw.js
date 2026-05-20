@@ -1,7 +1,9 @@
 const Discord = require('discord.js');
 
 module.exports = async (client, d) => {
-    client.player.updateVoiceState(d);
+    if (client.player) {
+        client.player.updateVoiceState(d);
+    }
 }
 
  

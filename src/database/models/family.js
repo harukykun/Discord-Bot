@@ -1,11 +1,13 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { createModel } = require('../connect');
 
-const Schema = new mongoose.Schema({
-    Guild: String,
-    User: String,
-    Parent: { type: Array, default: null },
-    Partner: { type: String, default: null },
-    Children: { type: Array, default: null },
+module.exports = createModel({
+    name: 'family',
+    fields: {
+        Guild: { type: DataTypes.STRING },
+        User: { type: DataTypes.STRING },
+        Parent: { type: DataTypes.JSONB, defaultValue: null },
+        Partner: { type: DataTypes.STRING, defaultValue: null },
+        Children: { type: DataTypes.JSONB, defaultValue: null }
+    }
 });
-
-module.exports = mongoose.model("family", Schema);

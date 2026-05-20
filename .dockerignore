@@ -1,0 +1,9 @@
+node_modules
+.git
+.gitignore
+.dockerignore
+.env
+.vscode
+scratch
+*.log
+npm-debug.log*
