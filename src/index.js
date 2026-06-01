@@ -178,28 +178,30 @@ const warnLogs = new Discord.WebhookClient({
 
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
-    if (error) if (error.length > 950) error = error.slice(0, 950) + '... view console for details';
-    if (error.stack) if (error.stack.length > 950) error.stack = error.stack.slice(0, 950) + '... view console for details';
-    if (!error.stack) return
-    const embed = new Discord.EmbedBuilder()
-        .setTitle(`🚨・Unhandled promise rejection`)
-        .addFields([
-            {
-                name: "Error",
-                value: error ? Discord.codeBlock(error) : "No error",
-            },
-            {
-                name: "Stack error",
-                value: error.stack ? Discord.codeBlock(error.stack) : "No stack error",
-            }
-        ])
-    consoleLogs.send({
-        username: 'Bot Logs',
-        embeds: [embed],
-    }).catch(() => {
-        console.log('Error sending unhandled promise rejection to webhook')
-        console.log(error)
-    })
+    try {
+        const errorStr = error ? String(error).slice(0, 950) : 'Unknown error';
+        const stackStr = (error && error.stack) ? String(error.stack).slice(0, 950) : 'No stack trace';
+        const embed = new Discord.EmbedBuilder()
+            .setTitle(`🚨・Unhandled promise rejection`)
+            .addFields([
+                {
+                    name: "Error",
+                    value: Discord.codeBlock(errorStr),
+                },
+                {
+                    name: "Stack error",
+                    value: Discord.codeBlock(stackStr),
+                }
+            ])
+        consoleLogs.send({
+            username: 'Bot Logs',
+            embeds: [embed],
+        }).catch(() => {
+            console.log('Error sending unhandled promise rejection to webhook')
+        })
+    } catch (handlerErr) {
+        console.error('Error in unhandledRejection handler:', handlerErr);
+    }
 });
 
 process.on('warning', warn => {

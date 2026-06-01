@@ -6,59 +6,111 @@ const path = require('path');
 let sequelize = null;
 const modelRegistry = {};
 
+const MAX_RETRIES = 5;
+const BASE_DELAY_MS = 3000;
+
 /**
  * Creates a Sequelize instance and connects to PostgreSQL.
+ * Retries up to MAX_RETRIES times with exponential backoff.
  * Called from bot.js on startup.
  */
 async function connect() {
-    try {
-        console.log(chalk.blue(chalk.bold(`Database`)), (chalk.white(`>>`)), chalk.red(`PostgreSQL`), chalk.green(`is connecting...`));
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            console.log(chalk.blue(chalk.bold(`Database`)), (chalk.white(`>>`)), chalk.red(`PostgreSQL`), chalk.green(`is connecting... (attempt ${attempt}/${MAX_RETRIES})`));
 
-        sequelize = new Sequelize(process.env.DATABASE_URL, {
-            dialect: 'postgres',
-            logging: false,
-            dialectOptions: {
-                ssl: process.env.DATABASE_SSL === 'false' ? false : {
-                    require: true,
-                    rejectUnauthorized: false
-                }
-            },
-            define: {
-                freezeTableName: true,
-                timestamps: false
-            }
-        });
-
-        await sequelize.authenticate();
-        console.log(chalk.blue(chalk.bold(`Database`)), (chalk.white(`>>`)), chalk.red(`PostgreSQL`), chalk.green(`is ready!`));
-
-        // Load all models from models directory to ensure they are registered
-        const modelsDir = path.join(__dirname, 'models');
-        if (fs.existsSync(modelsDir)) {
-            fs.readdirSync(modelsDir).forEach(file => {
-                if (file.endsWith('.js')) {
-                    require(path.join(modelsDir, file));
+            sequelize = new Sequelize(process.env.DATABASE_URL, {
+                dialect: 'postgres',
+                logging: false,
+                pool: {
+                    max: 5,
+                    min: 0,
+                    acquire: 30000,
+                    idle: 10000,
+                },
+                retry: {
+                    max: 3,
+                },
+                dialectOptions: {
+                    ssl: process.env.DATABASE_SSL === 'false' ? false : {
+                        require: true,
+                        rejectUnauthorized: false
+                    }
+                },
+                define: {
+                    freezeTableName: true,
+                    timestamps: false
                 }
             });
-        }
 
-        // Initialize all registered models
-        for (const [name, modelDef] of Object.entries(modelRegistry)) {
-            if (!modelDef._initialized) {
-                modelDef._initModel(sequelize);
+            await sequelize.authenticate();
+            console.log(chalk.blue(chalk.bold(`Database`)), (chalk.white(`>>`)), chalk.red(`PostgreSQL`), chalk.green(`is ready!`));
+
+            // Load all models from models directory to ensure they are registered
+            const modelsDir = path.join(__dirname, 'models');
+            if (fs.existsSync(modelsDir)) {
+                fs.readdirSync(modelsDir).forEach(file => {
+                    if (file.endsWith('.js')) {
+                        require(path.join(modelsDir, file));
+                    }
+                });
+            }
+
+            // Initialize all registered models
+            for (const [name, modelDef] of Object.entries(modelRegistry)) {
+                if (!modelDef._initialized) {
+                    modelDef._initModel(sequelize);
+                }
+            }
+
+            // Sync all models with database (creates tables if not exist)
+            await sequelize.sync({ alter: false });
+            console.log(chalk.blue(chalk.bold(`Database`)), (chalk.white(`>>`)), chalk.red(`PostgreSQL`), chalk.green(`tables synced!`));
+
+            // Start periodic health check to auto-reconnect if DB goes down
+            startHealthCheck();
+
+            return;
+
+        } catch (err) {
+            console.log(chalk.red(`[ERROR]`), chalk.white(`>>`), chalk.red(`PostgreSQL`), chalk.white(`>>`), chalk.red(`Failed to connect (attempt ${attempt}/${MAX_RETRIES})`), chalk.white(`>>`), chalk.red(`Error: ${err.message || err}`));
+
+            if (attempt < MAX_RETRIES) {
+                const delay = BASE_DELAY_MS * Math.pow(2, attempt - 1);
+                console.log(chalk.yellow(`Retrying in ${delay / 1000}s...`));
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                console.log(chalk.red(`[FATAL] All ${MAX_RETRIES} connection attempts failed. Bot will continue WITHOUT database.`));
+                console.log(chalk.red(`Database features will be unavailable until connection is restored.`));
+                // Do NOT process.exit — let the bot run without DB so Discord stays online
+                // The health check will keep trying to reconnect
+                startHealthCheck();
             }
         }
-
-        // Sync all models with database (creates tables if not exist)
-        await sequelize.sync({ alter: false });
-        console.log(chalk.blue(chalk.bold(`Database`)), (chalk.white(`>>`)), chalk.red(`PostgreSQL`), chalk.green(`tables synced!`));
-
-    } catch (err) {
-        console.log(chalk.red(`[ERROR]`), chalk.white(`>>`), chalk.red(`PostgreSQL`), chalk.white(`>>`), chalk.red(`Failed to connect to PostgreSQL!`), chalk.white(`>>`), chalk.red(`Error: ${err}`));
-        console.log(chalk.red("Exiting..."));
-        process.exit(1);
     }
-    return;
+}
+
+/**
+ * Periodically checks database connectivity and reconnects if needed.
+ */
+let healthCheckInterval = null;
+function startHealthCheck() {
+    if (healthCheckInterval) return; // Already running
+
+    healthCheckInterval = setInterval(async () => {
+        if (!sequelize) return;
+        try {
+            await sequelize.authenticate();
+        } catch (err) {
+            console.log(chalk.yellow(`[DB Health] Connection lost, attempting to reconnect...`));
+            try {
+                await sequelize.authenticate();
+                console.log(chalk.green(`[DB Health] Reconnected successfully!`));
+            } catch (retryErr) {
+                console.log(chalk.red(`[DB Health] Reconnection failed: ${retryErr.message || retryErr}`));
+            }
+        }
+    }, 60000); // Check every 60 seconds
 }
 
 /**

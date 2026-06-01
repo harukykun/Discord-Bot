@@ -36,7 +36,6 @@ const client = new Discord.Client({
         ],
         repliedUser: true
     },
-    autoReconnect: true,
     disabledEvents: [
         "TYPING_START"
     ],
@@ -122,29 +121,31 @@ const warnLogs = new Discord.WebhookClient({
 
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
-    if (error) if (error.length > 950) error = error.slice(0, 950) + '... view console for details';
-    if (error.stack) if (error.stack.length > 950) error.stack = error.stack.slice(0, 950) + '... view console for details';
-    if (!error.stack) return
-    const embed = new Discord.EmbedBuilder()
-        .setTitle(`🚨・Unhandled promise rejection`)
-        .addFields([
-            {
-                name: "Error",
-                value: error ? Discord.codeBlock(error) : "No error",
-            },
-            {
-                name: "Stack error",
-                value: error.stack ? Discord.codeBlock(error.stack) : "No stack error",
-            }
-        ])
-        .setColor(client.config.colors.normal)
-    consoleLogs.send({
-        username: 'Bot Logs',
-        embeds: [embed],
-    }).catch(() => {
-        console.log('Error sending unhandledRejection to webhook')
-        console.log(error)
-    })
+    try {
+        const errorStr = error ? String(error).slice(0, 950) : 'Unknown error';
+        const stackStr = (error && error.stack) ? String(error.stack).slice(0, 950) : 'No stack trace';
+        const embed = new Discord.EmbedBuilder()
+            .setTitle(`🚨・Unhandled promise rejection`)
+            .addFields([
+                {
+                    name: "Error",
+                    value: Discord.codeBlock(errorStr),
+                },
+                {
+                    name: "Stack error",
+                    value: Discord.codeBlock(stackStr),
+                }
+            ])
+            .setColor(client.config.colors.normal)
+        consoleLogs.send({
+            username: 'Bot Logs',
+            embeds: [embed],
+        }).catch(() => {
+            console.log('Error sending unhandledRejection to webhook')
+        })
+    } catch (handlerErr) {
+        console.error('Error in unhandledRejection handler:', handlerErr);
+    }
 });
 
 process.on('warning', warn => {
@@ -168,25 +169,65 @@ process.on('warning', warn => {
 });
 
 client.on(Discord.ShardEvents.Error, error => {
-    console.log(error)
-    if (error) if (error.length > 950) error = error.slice(0, 950) + '... view console for details';
-    if (error.stack) if (error.stack.length > 950) error.stack = error.stack.slice(0, 950) + '... view console for details';
-    if (!error.stack) return
-    const embed = new Discord.EmbedBuilder()
-        .setTitle(`🚨・A websocket connection encountered an error`)
-        .addFields([
-            {
-                name: `Error`,
-                value: `\`\`\`${error}\`\`\``,
-            },
-            {
-                name: `Stack error`,
-                value: `\`\`\`${error.stack}\`\`\``,
-            }
-        ])
-        .setColor(client.config.colors.normal)
-    consoleLogs.send({
-        username: 'Bot Logs',
-        embeds: [embed],
-    });
+    console.error('Shard error:', error);
+    try {
+        const errorStr = error ? String(error).slice(0, 950) : 'Unknown error';
+        const stackStr = (error && error.stack) ? String(error.stack).slice(0, 950) : 'No stack trace';
+        const embed = new Discord.EmbedBuilder()
+            .setTitle(`🚨・A websocket connection encountered an error`)
+            .addFields([
+                {
+                    name: `Error`,
+                    value: Discord.codeBlock(errorStr),
+                },
+                {
+                    name: `Stack error`,
+                    value: Discord.codeBlock(stackStr),
+                }
+            ])
+            .setColor(client.config.colors.normal)
+        consoleLogs.send({
+            username: 'Bot Logs',
+            embeds: [embed],
+        }).catch(() => {
+            console.log('Error sending shard error to webhook');
+        });
+    } catch (handlerErr) {
+        console.error('Error in ShardEvents.Error handler:', handlerErr);
+    }
+});
+
+// Catch uncaught exceptions to prevent silent crashes
+process.on('uncaughtException', error => {
+    console.error('Uncaught exception:', error);
+    try {
+        const errorStr = error ? String(error).slice(0, 950) : 'Unknown error';
+        const stackStr = (error && error.stack) ? String(error.stack).slice(0, 950) : 'No stack trace';
+        const embed = new Discord.EmbedBuilder()
+            .setTitle(`💀・Uncaught Exception`)
+            .addFields([
+                { name: `Error`, value: Discord.codeBlock(errorStr) },
+                { name: `Stack`, value: Discord.codeBlock(stackStr) }
+            ])
+            .setColor('#FF0000')
+        consoleLogs.send({
+            username: 'Bot Logs',
+            embeds: [embed],
+        }).catch(() => {});
+    } catch (handlerErr) {
+        console.error('Error in uncaughtException handler:', handlerErr);
+    }
+});
+
+// Graceful shutdown handlers
+process.on('SIGTERM', () => {
+    console.log('Received SIGTERM, shutting down gracefully...');
+    client.destroy();
+    process.exit(0);
+});
+
+process.on('SIGINT', () => {
+    console.log('Received SIGINT, shutting down gracefully...');
+    client.destroy();
+    process.exit(0);
 });

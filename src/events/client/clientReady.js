@@ -26,27 +26,34 @@ module.exports = async (client) => {
     });
 
     setInterval(async function () {
-        const promises = [
-            client.shard.fetchClientValues('guilds.cache.size'),
-        ];
-        return Promise.all(promises)
-            .then(results => {
-                const totalGuilds = results[0].reduce((acc, guildCount) => acc + guildCount, 0);
-                let statuttext;
-                if (process.env.DISCORD_STATUS) {
-                    statuttext = process.env.DISCORD_STATUS.split(', ');
-                } else {
-                    statuttext = [
-                        `・❓┆/help`,
-                        `・💻┆${totalGuilds} servers`,
-                        `・📨┆discord.gg/tiempizzarinascita`,
-                        `・🎉┆400+ commands`,
-                        `・🏷️┆Version ${require(`${process.cwd()}/package.json`).version}`
-                    ];
-                }
-                const randomText = statuttext[Math.floor(Math.random() * statuttext.length)];
-                client.user.setPresence({ activities: [{ name: randomText, type: Discord.ActivityType.Playing }], status: 'online' });
-            })
+        try {
+            const promises = [
+                client.shard.fetchClientValues('guilds.cache.size'),
+            ];
+            return Promise.all(promises)
+                .then(results => {
+                    const totalGuilds = results[0].reduce((acc, guildCount) => acc + guildCount, 0);
+                    let statuttext;
+                    if (process.env.DISCORD_STATUS) {
+                        statuttext = process.env.DISCORD_STATUS.split(', ');
+                    } else {
+                        statuttext = [
+                            `・❓┆/help`,
+                            `・💻┆${totalGuilds} servers`,
+                            `・📨┆discord.gg/tiempizzarinascita`,
+                            `・🎉┆400+ commands`,
+                            `・🏷️┆Version ${require(`${process.cwd()}/package.json`).version}`
+                        ];
+                    }
+                    const randomText = statuttext[Math.floor(Math.random() * statuttext.length)];
+                    client.user.setPresence({ activities: [{ name: randomText, type: Discord.ActivityType.Playing }], status: 'online' });
+                })
+                .catch(err => {
+                    console.warn('[Status Update] Failed to update presence:', err.message || err);
+                });
+        } catch (err) {
+            console.warn('[Status Update] Error in status interval:', err.message || err);
+        }
     }, 50000)
 
     if (client.player) {

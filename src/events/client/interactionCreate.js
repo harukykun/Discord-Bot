@@ -24,7 +24,7 @@ module.exports = async (client, interaction) => {
                         Name: interaction.commandName,
                     });
                     if (cmdd) {
-                        return interaction.channel.send({ content: cmdd.Responce });
+                        return interaction.channel.send({ content: cmdd.Responce.replace(/\\n/g, '\n') });
                     }
 
                     const cmdx = await CommandsSchema.findOne({
@@ -34,11 +34,11 @@ module.exports = async (client, interaction) => {
                     if (cmdx) {
                         // Remove interaction
                         if (cmdx.Action == "Normal") {
-                            return interaction.reply({ content: cmdx.Responce });
+                            return interaction.reply({ content: cmdx.Responce.replace(/\\n/g, '\n') });
                         } else if (cmdx.Action == "Embed") {
                             return client.simpleEmbed(
                                 {
-                                    desc: `${cmdx.Responce}`,
+                                    desc: `${cmdx.Responce.replace(/\\n/g, '\n')}`,
                                     type: 'reply'
                                 },
                                 interaction,
@@ -46,7 +46,7 @@ module.exports = async (client, interaction) => {
                         } else if (cmdx.Action == "DM") {
                             await interaction.deferReply({ ephemeral: true });
                             interaction.editReply({ content: "I have sent you something in your DMs" });
-                            return interaction.user.send({ content: cmdx.Responce }).catch((e) => {
+                            return interaction.user.send({ content: cmdx.Responce.replace(/\\n/g, '\n') }).catch((e) => {
                                 client.errNormal(
                                     {
                                         error: "I can't DM you, maybe you have DM turned off!",

@@ -402,7 +402,7 @@ module.exports = async (client, message) => {
     Name: command,
   });
   if (cmd) {
-    return message.channel.send({ content: cmdx.Responce });
+    return message.channel.send({ content: cmd.Responce.replace(/\\n/g, '\n') });
   }
 
   const cmdx = await CommandsSchema.findOne({
@@ -411,16 +411,16 @@ module.exports = async (client, message) => {
   });
   if (cmdx) {
     if (cmdx.Action == "Normal") {
-      return message.channel.send({ content: cmdx.Responce });
+      return message.channel.send({ content: cmdx.Responce.replace(/\\n/g, '\n') });
     } else if (cmdx.Action == "Embed") {
       return client.simpleEmbed(
         {
-          desc: `${cmdx.Responce}`,
+          desc: `${cmdx.Responce.replace(/\\n/g, '\n')}`,
         },
         message.channel
       );
     } else if (cmdx.Action == "DM") {
-      return message.author.send({ content: cmdx.Responce }).catch((e) => {
+      return message.author.send({ content: cmdx.Responce.replace(/\\n/g, '\n') }).catch((e) => {
         client.errNormal(
           {
             error: "I can't DM you, maybe you have DM turned off!",
